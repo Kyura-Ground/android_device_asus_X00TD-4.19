@@ -12,6 +12,10 @@ TARGET_SCREEN_HEIGHT := 2160
 TARGET_SCREEN_WIDTH := 1080
 
 # Overlays
+# Only the X00TD brightness curve needs precedence over the common curve.
+DEVICE_PACKAGE_OVERLAYS := \
+    $(LOCAL_PATH)/overlay-brightness \
+    $(DEVICE_PACKAGE_OVERLAYS)
 DEVICE_PACKAGE_OVERLAYS += \
     $(LOCAL_PATH)/overlay
 
