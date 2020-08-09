@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- Official X00TD backlight control points, converted using the existing
+         2-450 nit display model. Values above the SDR maximum are capped. -->
+    <integer-array name="config_autoBrightnessLevels">
+        <item>1</item>
+        <item>15</item>
+        <item>30</item>
+        <item>50</item>
+        <item>100</item>
+        <item>200</item>
+        <item>300</item>
+        <item>400</item>
+        <item>500</item>
+        <item>650</item>
+        <item>800</item>
+        <item>1000</item>
+        <item>1500</item>
+        <item>2000</item>
+        <item>3000</item>
+        <item>4000</item>
+        <item>5000</item>
+        <item>7000</item>
+        <item>10000</item>
+        <item>12500</item>
+        <item>15000</item>
+        <item>17500</item>
+        <item>20000</item>
+        <item>50000</item>
+    </integer-array>
+
+    <array name="config_autoBrightnessDisplayValuesNits">
+        <item>12.541</item>
+        <item>17.812</item>
+        <item>51.192</item>
+        <item>75.788</item>
+        <item>96.871</item>
+        <item>116.196</item>
+        <item>146.063</item>
+        <item>167.145</item>
+        <item>182.957</item>
+        <item>195.255</item>
+        <item>212.824</item>
+        <item>230.392</item>
+        <item>247.961</item>
+        <item>318.235</item>
+        <item>367.427</item>
+        <item>406.078</item>
+        <item>423.647</item>
+        <item>432.431</item>
+        <item>437.702</item>
+        <item>444.729</item>
+        <item>450.000</item>
+        <item>450.000</item>
+        <item>450.000</item>
+        <item>450.000</item>
+        <item>450.000</item>
+    </array>
+
+    <integer-array name="config_autoBrightnessLevelsIdle">
+        <item>1</item>
+        <item>15</item>
+        <item>30</item>
+        <item>50</item>
+        <item>100</item>
+        <item>200</item>
+        <item>300</item>
+        <item>400</item>
+        <item>500</item>
+        <item>650</item>
+        <item>800</item>
+        <item>1000</item>
+        <item>1500</item>
+        <item>2000</item>
+        <item>3000</item>
+        <item>4000</item>
+        <item>5000</item>
+        <item>7000</item>
+        <item>10000</item>
+        <item>12500</item>
+        <item>15000</item>
+        <item>17500</item>
+        <item>20000</item>
+        <item>50000</item>
+    </integer-array>
+
+    <array name="config_autoBrightnessDisplayValuesNitsIdle">
+        <item>12.541</item>
+        <item>17.812</item>
+        <item>51.192</item>
+        <item>75.788</item>
+        <item>96.871</item>
+        <item>116.196</item>
+        <item>146.063</item>
+        <item>167.145</item>
+        <item>182.957</item>
+        <item>195.255</item>
+        <item>212.824</item>
+        <item>230.392</item>
+        <item>247.961</item>
+        <item>318.235</item>
+        <item>367.427</item>
+        <item>406.078</item>
+        <item>423.647</item>
+        <item>432.431</item>
+        <item>437.702</item>
+        <item>444.729</item>
+        <item>450.000</item>
+        <item>450.000</item>
+        <item>450.000</item>
+        <item>450.000</item>
+        <item>450.000</item>
+    </array>
+</resources>
