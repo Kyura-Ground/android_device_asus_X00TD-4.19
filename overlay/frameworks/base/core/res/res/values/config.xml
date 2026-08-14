@@ -16,20 +16,26 @@
 
 <resources>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         MEMORY: более консервативный профиль для X00TD
-         ═══════════════════════════════════════════════════════════════ -->
+    <!-- Vibrator pattern for feedback about a long screen/key press -->
+    <integer-array name="config_longPressVibePattern">
+        <item>0</item>
+        <item>50</item>
+        <item>60</item>
+        <item>61</item>
+    </integer-array>
 
-    <item name="config_highResTaskSnapshotScale" format="float" type="dimen">0.8</item>
-    <item name="config_resActivitySnapshotScale" format="float" type="dimen">0.45</item>
+    <!-- Vibrator pattern for feedback about touching a virtual key -->
+    <integer-array name="config_virtualKeyVibePattern">
+        <item>0</item>
+        <item>100</item>
+        <item>20</item>
+        <item>30</item>
+    </integer-array>
 
-    <integer name="config_customizedMaxCachedProcesses">32</integer>
-
-    <integer name="config_pinnerCameraPinBytes">29360128</integer>    <!-- 28 МБ -->
-    <integer name="config_pinnerAssistantPinBytes">12582912</integer> <!-- 12 МБ -->
-    <integer name="config_pinnerWebviewPinBytes">12582912</integer>   <!-- 12 МБ -->
-
-    <integer name="config_maxNumVisibleRecentTasks">12</integer>
+    <!-- Vibrator pattern for a very short but reliable vibration for soft keyboard tap -->
+    <integer-array name="config_keyboardTapVibePattern">
+        <item>40</item>
+    </integer-array>
 
     <!-- Sustained performance mode не поддерживается -->
     <bool name="config_sustainedPerformanceModeSupported">false</bool>
