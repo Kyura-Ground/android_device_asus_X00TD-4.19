@@ -30,16 +30,16 @@ blob_fixups: blob_fixups_user_type = {
         .remove_needed('libmm-qcamera.so'),       
     # Fingerprint - uneeded
     'vendor/lib64/libvendor.goodix.hardware.fingerprint@1.0-service.so': blob_fixup()
-        .replace_needed('libprotobuf-cpp-lite.so', 'libprotobuf-cpp-lite-21.12.so'),
-    'vendor/lib64/libvendor.goodix.hardware.fingerprint@1.0-service.so': blob_fixup()
-        .replace_needed('libhidlbase.so.so', 'libhidlbase-v32.so'),  
+        .replace_needed('libprotobuf-cpp-lite.so', 'libprotobuf-cpp-lite-21.12.so')
+        .replace_needed('libhidlbase.so', 'libhidlbase-v32.so'),
     'vendor/lib64/libvendor.goodix.hardware.fingerprint@1.0.so': blob_fixup()
-        .replace_needed('libhidlbase.so.so', 'libhidlbase-v32.so'),              
+        .replace_needed('libhidlbase.so', 'libhidlbase-v32.so'),
     # Fingerprint - liblog dep.
     'vendor/lib64/hw/cdfinger.fingerprint.default.so': blob_fixup()
-        .add_needed('liblog.so'),
+        .add_needed('liblog.so')
+        .fix_soname(),
     # Fingerprint - so name fixups
-    ('vendor/lib64/hw/cdfinger.fingerprint.default.so', 'vendor/lib64/hw/fingerprint.sdm660.so'):blob_fixup()
+    'vendor/lib64/hw/fingerprint.sdm660.so': blob_fixup()
         .fix_soname(), 
 }  # fmt: skip
 
