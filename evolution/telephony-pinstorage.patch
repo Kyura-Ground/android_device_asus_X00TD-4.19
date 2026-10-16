@@ -1,0 +1,73 @@
+From bd425d7634b79802d3482f792b2d710d6256ab40 Mon Sep 17 00:00:00 2001
+From: ikwfahmi <mikhwanfahmi4@gmail.com>
+Date: Sat, 17 Oct 2026 05:32:59 +0700
+Subject: [PATCH] PinStorage: Retry key generation with a bounded auth timeout
+
+Legacy Keymaster can reject Integer.MAX_VALUE with insufficient buffer
+space. Retry authenticated key generation once with a timeout that fits
+unsigned 32-bit milliseconds, retaining device-credential authentication.
+
+Change-Id: Ice6c0bebfa6b407433a0abbf122d8f7f670ac78b
+Signed-off-by: ikwfahmi <mikhwanfahmi4@gmail.com>
+---
+ .../internal/telephony/uicc/PinStorage.java   | 23 ++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/uicc/PinStorage.java b/src/java/com/android/internal/telephony/uicc/PinStorage.java
+index 4d09f49..972e242 100644
+--- a/src/java/com/android/internal/telephony/uicc/PinStorage.java
++++ b/src/java/com/android/internal/telephony/uicc/PinStorage.java
+@@ -54,6 +54,8 @@ import android.os.PersistableBundle;
+ import android.os.WorkSource;
+ import android.provider.Settings;
+ import android.security.Flags;
++import android.security.KeyStoreException;
++import android.security.keymaster.KeymasterDefs;
+ import android.security.keystore.KeyGenParameterSpec;
+ import android.telephony.AnomalyReporter;
+ import android.telephony.CarrierConfigManager;
+@@ -90,6 +92,7 @@ import java.io.FileDescriptor;
+ import java.io.IOException;
+ import java.io.PrintWriter;
+ import java.security.KeyStore;
++import java.security.ProviderException;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Calendar;
+@@ -140,6 +143,9 @@ public class PinStorage extends Handler {
+     private static final int GCM_PARAMETER_TAG_BIT_LEN = 128;
+     private static final int SHORT_TERM_KEY_DURATION_MINUTES = 15;
+ 
++    // Keep the compatibility timeout within an unsigned 32-bit millisecond range.
++    private static final int COMPAT_AUTH_TIMEOUT_SECONDS = (int) (0xffff_ffffL / 1000);
++
+     /** Alias of the long-term key that does not require user authentication. */
+     private static final String KEYSTORE_ALIAS_LONG_TERM_ALWAYS = "PinStorage_longTerm_always_key";
+     /** Alias of the user authentication bound long-term key. */
+@@ -1705,7 +1711,22 @@ public class PinStorage extends Handler {
+                         .setUserAuthenticationParameters(Integer.MAX_VALUE, AUTH_DEVICE_CREDENTIAL);
+             }
+             keyGenerator.init(keyGenParameterSpec.build());
+-            return keyGenerator.generateKey();
++            try {
++                return keyGenerator.generateKey();
++            } catch (ProviderException e) {
++                if (!isUserAuthRequired || !(e.getCause() instanceof KeyStoreException)
++                        || ((KeyStoreException) e.getCause()).getErrorCode()
++                                != KeymasterDefs.KM_ERROR_INSUFFICIENT_BUFFER_SPACE) {
++                    throw e;
++                }
++                // Some legacy Keymaster implementations reject Integer.MAX_VALUE. Retry once
++                // with a bounded timeout, retaining device-credential authentication.
++                logd("Retrying PIN key generation with a bounded authentication timeout");
++                keyGenParameterSpec.setUserAuthenticationParameters(
++                        COMPAT_AUTH_TIMEOUT_SECONDS, AUTH_DEVICE_CREDENTIAL);
++                keyGenerator.init(keyGenParameterSpec.build());
++                return keyGenerator.generateKey();
++            }
+         } catch (Exception e) {
+             loge("Create key exception", e);
+             return null;
+-- 
+2.56.0
+
