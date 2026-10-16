@@ -1,0 +1,230 @@
+From 1acfa754d0470f4cf688a63883d80b63f89cea2a Mon Sep 17 00:00:00 2001
+From: ikwfahmi <mikhwanfahmi4@gmail.com>
+Date: Thu, 15 Oct 2026 06:56:14 +0700
+Subject: [PATCH] RIL: Gate ECNO criteria on AIDL network v2
+
+Change-Id: I4755e00d04d85e12d7b8f0c73bcaf16327600486
+Signed-off-by: ikwfahmi <mikhwanfahmi4@gmail.com>
+
+---
+ .../com/android/internal/telephony/RIL.java   |  9 +++
+ .../telephony/SignalStrengthController.java   | 39 ++++++-----
+ .../android/internal/telephony/RILTest.java   | 66 +++++++++++++++++++
+ .../SignalStrengthControllerTest.java         | 42 +++++++++++-
+ 4 files changed, 139 insertions(+), 17 deletions(-)
+
+diff --git a/src/java/com/android/internal/telephony/RIL.java b/src/java/com/android/internal/telephony/RIL.java
+index ca586ed465..0f590dffdd 100644
+--- a/src/java/com/android/internal/telephony/RIL.java
++++ b/src/java/com/android/internal/telephony/RIL.java
+@@ -4071,6 +4071,15 @@ public class RIL extends BaseCommands implements CommandsInterface {
+             return;
+         }
+ 
++        // ECNO was added in AIDL network version 2; HIDL and AIDL version 1 lack it.
++        // Check after splitting HIDL lists so supported criteria can still complete.
++        if (signalThresholdInfos.stream().anyMatch(info -> info.getSignalMeasurementType()
++                == SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_ECNO)
++                && !canMakeRequest("setSignalStrengthReportingCriteria ECNO", networkProxy, result,
++                        RADIO_HAL_VERSION_2_1)) {
++            return;
++        }
++
+         RILRequest rr = obtainRequest(RIL_REQUEST_SET_SIGNAL_STRENGTH_REPORTING_CRITERIA, result,
+                 mRILDefaultWorkSource);
+ 
+diff --git a/src/java/com/android/internal/telephony/SignalStrengthController.java b/src/java/com/android/internal/telephony/SignalStrengthController.java
+index c065159448..575933075d 100644
+--- a/src/java/com/android/internal/telephony/SignalStrengthController.java
++++ b/src/java/com/android/internal/telephony/SignalStrengthController.java
+@@ -526,16 +526,20 @@ public class SignalStrengthController extends Handler {
+                                 (nrMeasurementEnabled & CellSignalStrengthNr.USE_SSSINR) != 0));
+             }
+ 
+-            int[] wcdmaEcnoThresholds = mCarrierConfig.getIntArray(
+-                    CarrierConfigManager.KEY_WCDMA_ECNO_THRESHOLDS_INT_ARRAY);
+-            if (wcdmaEcnoThresholds != null) {
+-                signalThresholdInfos.add(
+-                        validateAndCreateSignalThresholdInfo(
+-                                SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_ECNO,
+-                                wcdmaEcnoThresholds,
+-                                AccessNetworkThresholds.UTRAN_ECNO,
+-                                AccessNetworkConstants.AccessNetworkType.UTRAN,
+-                                false));
++            // ECNO criteria were introduced in AIDL network version 2.
++            if (mPhone.getHalVersion(HAL_SERVICE_NETWORK)
++                    .greaterOrEqual(RIL.RADIO_HAL_VERSION_2_1)) {
++                int[] wcdmaEcnoThresholds = mCarrierConfig.getIntArray(
++                        CarrierConfigManager.KEY_WCDMA_ECNO_THRESHOLDS_INT_ARRAY);
++                if (wcdmaEcnoThresholds != null) {
++                    signalThresholdInfos.add(
++                            validateAndCreateSignalThresholdInfo(
++                                    SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_ECNO,
++                                    wcdmaEcnoThresholds,
++                                    AccessNetworkThresholds.UTRAN_ECNO,
++                                    AccessNetworkConstants.AccessNetworkType.UTRAN,
++                                    false));
++                }
+             }
+ 
+         }
+@@ -604,12 +608,15 @@ public class SignalStrengthController extends Handler {
+                             AccessNetworkThresholds.NGRAN_SSSINR,
+                             AccessNetworkConstants.AccessNetworkType.NGRAN,
+                             false));
+-            signalThresholdInfos.add(
+-                    createSignalThresholdsInfo(
+-                            SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_ECNO,
+-                            AccessNetworkThresholds.UTRAN_ECNO,
+-                            AccessNetworkConstants.AccessNetworkType.UTRAN,
+-                            false));
++            if (mPhone.getHalVersion(HAL_SERVICE_NETWORK)
++                    .greaterOrEqual(RIL.RADIO_HAL_VERSION_2_1)) {
++                signalThresholdInfos.add(
++                        createSignalThresholdsInfo(
++                                SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_ECNO,
++                                AccessNetworkThresholds.UTRAN_ECNO,
++                                AccessNetworkConstants.AccessNetworkType.UTRAN,
++                                false));
++            }
+         }
+ 
+         consolidatedAndSetReportingCriteria(signalThresholdInfos);
+diff --git a/tests/telephonytests/src/com/android/internal/telephony/RILTest.java b/tests/telephonytests/src/com/android/internal/telephony/RILTest.java
+index 1b01015978..aa7b05d184 100644
+--- a/tests/telephonytests/src/com/android/internal/telephony/RILTest.java
++++ b/tests/telephonytests/src/com/android/internal/telephony/RILTest.java
+@@ -2666,6 +2666,72 @@ public class RILTest extends TelephonyTest {
+                         .build());
+     }
+ 
++    private SignalThresholdInfo ecnoSignalStrengthCriterion() {
++        return new SignalThresholdInfo.Builder()
++                .setRadioAccessNetworkType(AccessNetworkConstants.AccessNetworkType.UTRAN)
++                .setSignalMeasurementType(SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_ECNO)
++                .setThresholds(new int[] {-24, -14}, true)
++                .build();
++    }
++
++    @Test
++    public void testSignalStrengthCriteriaEcnoRequiresAidlV2() throws Exception {
++        for (Map<Integer, HalVersion> version : List.of(mHalVersionV14, mHalVersionV15,
++                mHalVersionV16, mHalVersionV20)) {
++            replaceInstance(RIL.class, "mHalVersion", mRILUnderTest, version);
++            doReturn(version == mHalVersionV20).when(mNetworkProxy).isAidl();
++            List<AsyncResult> results = new ArrayList<>();
++            mRILUnderTest.setSignalStrengthReportingCriteria(
++                    List.of(ecnoSignalStrengthCriterion()), signalStrengthResult(results));
++            mRILUnderTest.setSignalStrengthReportingCriteria(
++                    List.of(ecnoSignalStrengthCriterion()), null);
++            processAllMessages();
++            verify(mNetworkProxy, never()).setSignalStrengthReportingCriteria(anyInt(), any());
++            assertEquals(1, results.size());
++            assertEquals(CommandException.Error.REQUEST_NOT_SUPPORTED,
++                    ((CommandException) results.get(0).exception).getCommandError());
++            verifySignalStrengthRequestsCompleted();
++        }
++    }
++
++    @Test
++    public void testSignalStrengthCriteriaHidlEcnoDoesNotBlockRscp() throws Exception {
++        replaceInstance(RIL.class, "mHalVersion", mRILUnderTest, mHalVersionV15);
++        List<SignalThresholdInfo> criteria = List.of(ecnoSignalStrengthCriterion(),
++                new SignalThresholdInfo.Builder()
++                        .setRadioAccessNetworkType(AccessNetworkConstants.AccessNetworkType.UTRAN)
++                        .setSignalMeasurementType(SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_RSCP)
++                        .setThresholds(new int[] {-115, -105}, true)
++                        .build());
++        List<AsyncResult> results = new ArrayList<>();
++        mRILUnderTest.setSignalStrengthReportingCriteria(criteria, signalStrengthResult(results));
++        verify(mNetworkProxy).setSignalStrengthReportingCriteria(mSerialNumberCaptor.capture(),
++                eq(List.of(criteria.get(1))));
++        processAllMessages();
++        assertTrue(results.isEmpty());
++        respondToSignalStrengthCriteria(mSerialNumberCaptor.getValue(), RadioError.NONE);
++        assertEquals(1, results.size());
++        assertEquals(CommandException.Error.REQUEST_NOT_SUPPORTED,
++                ((CommandException) results.get(0).exception).getCommandError());
++        verifySignalStrengthRequestsCompleted();
++    }
++
++    @Test
++    public void testSignalStrengthCriteriaEcnoAidlV2KeepsBatch() throws Exception {
++        replaceInstance(RIL.class, "mHalVersion", mRILUnderTest, mHalVersionV21);
++        doReturn(true).when(mNetworkProxy).isAidl();
++        List<SignalThresholdInfo> criteria = new ArrayList<>(signalStrengthCriteria());
++        criteria.add(ecnoSignalStrengthCriterion());
++        List<AsyncResult> results = new ArrayList<>();
++        mRILUnderTest.setSignalStrengthReportingCriteria(criteria, signalStrengthResult(results));
++        verify(mNetworkProxy).setSignalStrengthReportingCriteria(mSerialNumberCaptor.capture(),
++                eq(criteria));
++        respondToSignalStrengthCriteriaAidl(mSerialNumberCaptor.getValue(), RadioError.NONE);
++        assertEquals(1, results.size());
++        assertNull(results.get(0).exception);
++        verifySignalStrengthRequestsCompleted();
++    }
++
+     private Message signalStrengthResult(List<AsyncResult> results) {
+         return new Handler(Looper.myLooper(), msg -> {
+             results.add((AsyncResult) msg.obj);
+diff --git a/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java b/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java
+index 22f59103e8..220c9674ed 100644
+--- a/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java
++++ b/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java
+@@ -1763,6 +1763,46 @@ public class SignalStrengthControllerTest extends TelephonyTest {
+         }
+     }
+ 
++    @Test
++    public void testEcnoCriteriaNotSentToHidl() {
++        verifyEcnoCriteriaSupport(RIL.RADIO_HAL_VERSION_1_5, false);
++    }
++
++    @Test
++    public void testEcnoCriteriaNotSentToAidlV1() {
++        verifyEcnoCriteriaSupport(RIL.RADIO_HAL_VERSION_2_0, false);
++    }
++
++    @Test
++    public void testEcnoCriteriaSentToAidlV2() {
++        verifyEcnoCriteriaSupport(RIL.RADIO_HAL_VERSION_2_1, true);
++    }
++
++    private void verifyEcnoCriteriaSupport(HalVersion version, boolean supported) {
++        doReturn(version).when(mPhone).getHalVersion(HAL_SERVICE_NETWORK);
++        mBundle.putIntArray(CarrierConfigManager.KEY_WCDMA_ECNO_THRESHOLDS_INT_ARRAY,
++                new int[] {-24, -14, -6, 1});
++        Mockito.clearInvocations(mSimulatedCommandsVerifier);
++        sendCarrierConfigUpdate();
++        assertEcnoCriteriaPresence(supported);
++
++        Mockito.clearInvocations(mSimulatedCommandsVerifier);
++        mSsc.handleMessage(mSsc.obtainMessage(4 /* EVENT_RIL_CONNECTED */));
++        processAllMessages();
++        assertEcnoCriteriaPresence(supported);
++    }
++
++    private void assertEcnoCriteriaPresence(boolean supported) {
++        ArgumentCaptor<List<SignalThresholdInfo>> captor = ArgumentCaptor.forClass(List.class);
++        verify(mSimulatedCommandsVerifier).setSignalStrengthReportingCriteria(
++                captor.capture(), isNull());
++        List<SignalThresholdInfo> criteria = captor.getValue();
++        assertThat(criteria.stream().anyMatch(info -> info.getSignalMeasurementType()
++                == SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_ECNO)).isEqualTo(supported);
++        assertThat(criteria.stream().anyMatch(info -> info.getSignalMeasurementType()
++                == SignalThresholdInfo.SIGNAL_MEASUREMENT_TYPE_RSCP)).isTrue();
++    }
++
+     private void sendCarrierConfigUpdate() {
+         CarrierConfigManager mockConfigManager = Mockito.mock(CarrierConfigManager.class);
+         when(mContext.getSystemService(Context.CARRIER_CONFIG_SERVICE))
+@@ -1805,4 +1845,4 @@ public class SignalStrengthControllerTest extends TelephonyTest {
+         }
+         return builder.build();
+     }
+-}
+\ No newline at end of file
++}
+-- 
+2.56.0
+
