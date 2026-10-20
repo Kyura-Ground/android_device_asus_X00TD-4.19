@@ -1,20 +1,24 @@
-From 1acfa754d0470f4cf688a63883d80b63f89cea2a Mon Sep 17 00:00:00 2001
+From 6062ce7298adb4ed894754bddcfca67e28ac5f43 Mon Sep 17 00:00:00 2001
 From: ikwfahmi <mikhwanfahmi4@gmail.com>
 Date: Thu, 15 Oct 2026 06:56:14 +0700
 Subject: [PATCH] RIL: Gate ECNO criteria on AIDL network v2
 
+Require HAL 2.1 for initial, carrier-config and explicit ECNO criteria.
+Keep the existing HIDL request splitting and supported criteria behavior.
+Refresh the test context for Infinity-X 17, which already ends the test
+file with a newline; omit the obsolete newline-only hunk.
+
 Change-Id: I4755e00d04d85e12d7b8f0c73bcaf16327600486
 Signed-off-by: ikwfahmi <mikhwanfahmi4@gmail.com>
-
 ---
  .../com/android/internal/telephony/RIL.java   |  9 +++
  .../telephony/SignalStrengthController.java   | 39 ++++++-----
  .../android/internal/telephony/RILTest.java   | 66 +++++++++++++++++++
- .../SignalStrengthControllerTest.java         | 42 +++++++++++-
- 4 files changed, 139 insertions(+), 17 deletions(-)
+ .../SignalStrengthControllerTest.java         | 40 +++++++++++
+ 4 files changed, 138 insertions(+), 16 deletions(-)
 
 diff --git a/src/java/com/android/internal/telephony/RIL.java b/src/java/com/android/internal/telephony/RIL.java
-index ca586ed465..0f590dffdd 100644
+index 0b1dd88..8ba49fe 100644
 --- a/src/java/com/android/internal/telephony/RIL.java
 +++ b/src/java/com/android/internal/telephony/RIL.java
 @@ -4071,6 +4071,15 @@ public class RIL extends BaseCommands implements CommandsInterface {
@@ -34,7 +38,7 @@ index ca586ed465..0f590dffdd 100644
                  mRILDefaultWorkSource);
  
 diff --git a/src/java/com/android/internal/telephony/SignalStrengthController.java b/src/java/com/android/internal/telephony/SignalStrengthController.java
-index c065159448..575933075d 100644
+index f9abdb4..fe086ff 100644
 --- a/src/java/com/android/internal/telephony/SignalStrengthController.java
 +++ b/src/java/com/android/internal/telephony/SignalStrengthController.java
 @@ -526,16 +526,20 @@ public class SignalStrengthController extends Handler {
@@ -91,7 +95,7 @@ index c065159448..575933075d 100644
  
          consolidatedAndSetReportingCriteria(signalThresholdInfos);
 diff --git a/tests/telephonytests/src/com/android/internal/telephony/RILTest.java b/tests/telephonytests/src/com/android/internal/telephony/RILTest.java
-index 1b01015978..aa7b05d184 100644
+index 9c165cc..07dc035 100644
 --- a/tests/telephonytests/src/com/android/internal/telephony/RILTest.java
 +++ b/tests/telephonytests/src/com/android/internal/telephony/RILTest.java
 @@ -2666,6 +2666,72 @@ public class RILTest extends TelephonyTest {
@@ -168,7 +172,7 @@ index 1b01015978..aa7b05d184 100644
          return new Handler(Looper.myLooper(), msg -> {
              results.add((AsyncResult) msg.obj);
 diff --git a/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java b/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java
-index 22f59103e8..220c9674ed 100644
+index d8a2b92..220c967 100644
 --- a/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java
 +++ b/tests/telephonytests/src/com/android/internal/telephony/SignalStrengthControllerTest.java
 @@ -1763,6 +1763,46 @@ public class SignalStrengthControllerTest extends TelephonyTest {
@@ -218,13 +222,6 @@ index 22f59103e8..220c9674ed 100644
      private void sendCarrierConfigUpdate() {
          CarrierConfigManager mockConfigManager = Mockito.mock(CarrierConfigManager.class);
          when(mContext.getSystemService(Context.CARRIER_CONFIG_SERVICE))
-@@ -1805,4 +1845,4 @@ public class SignalStrengthControllerTest extends TelephonyTest {
-         }
-         return builder.build();
-     }
--}
-\ No newline at end of file
-+}
 -- 
 2.56.0
 
