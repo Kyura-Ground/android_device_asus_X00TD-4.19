@@ -9,19 +9,18 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
 # Select the variant before the common configuration reads it.
-WITH_GAPPS ?= false
+WITH_GAPPS ?= true
 INFINITY_BUILD_TYPE := UNOFFICIAL
 INFINITY_MAINTAINER := Kyura
 PRODUCT_GMS_CLIENTID_BASE := android-asus
+TARGET_EXCLUDES_AUDIOFX := true
+TARGET_DISABLE_MATLOG := true
 
 # Inherit Infinity-X phone configuration.
 $(call inherit-product, vendor/infinity/config/common_full_phone.mk)
 
 # Inherit from X00TD device
 $(call inherit-product, $(LOCAL_PATH)/device.mk)
-
-TARGET_EXCLUDES_AUDIOFX := true
-TARGET_DISABLE_MATLOG := true
 
 # Device identifier. This must come after all inclusions.
 PRODUCT_NAME := infinity_X00TD
