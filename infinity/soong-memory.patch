@@ -1,0 +1,40 @@
+From b6a35e86885320a8a12abf9db7d66ffd4b9e4c3d Mon Sep 17 00:00:00 2001
+From: mayuresh2543 <mayureshnanal846@gmail.com>
+Date: Wed, 26 Aug 2026 14:57:32 +0000
+Subject: [PATCH] soong_build: enforce 40GiB memory limit and aggressive GC
+
+Apply the existing Go runtime memory target and GC percentage to
+Infinity-X 17's soong_build entry point for Crave. Keep Infinity-X's
+remaining Soong code and module graph unchanged. The Go limit is soft
+and applies to this process, not to the total memory of the ROM build.
+
+Change-Id: I2bf07e56721be24b3f1bad77c5ed1ddaf514aa10
+---
+ cmd/soong_build/main.go | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/cmd/soong_build/main.go b/cmd/soong_build/main.go
+index 96e7ec6..1a12a93 100644
+--- a/cmd/soong_build/main.go
++++ b/cmd/soong_build/main.go
+@@ -22,6 +22,7 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 	"runtime"
++	"runtime/debug"
+ 	"strings"
+ 	"time"
+ 
+@@ -314,6 +315,9 @@ func parseAvailableEnv() map[string]string {
+ }
+ 
+ func main() {
++	debug.SetMemoryLimit(40 * 1024 * 1024 * 1024)
++	debug.SetGCPercent(25)
++
+ 	flag.Parse()
+ 
+ 	if cmdlineArgs.Memprofile == "" {
+-- 
+2.56.0
+
