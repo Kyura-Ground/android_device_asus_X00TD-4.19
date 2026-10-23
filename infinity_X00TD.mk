@@ -9,7 +9,7 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
 # Select the variant before the common configuration reads it.
-WITH_GAPPS ?= true
+WITH_GAPPS ?= false
 INFINITY_BUILD_TYPE := UNOFFICIAL
 INFINITY_MAINTAINER := Kyura
 PRODUCT_GMS_CLIENTID_BASE := android-asus
