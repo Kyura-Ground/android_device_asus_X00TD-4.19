@@ -19,7 +19,9 @@ TARGET_BOOTLOADER_BOARD_NAME := sdm636
 DEVICE_MANIFEST_FILE += $(DEVICE_PATH)/manifest.xml
 
 # Kernel
-TARGET_KERNEL_CONFIG := vendor/asus/X00TD_defconfig
+TARGET_KERNEL_CONFIG := \
+    vendor/asus/X00TD_defconfig \
+    vendor/extra/ksu.config
 #TARGET_KERNEL_CONFIG := vendor/debugfs.config
 
 # Sepolicy
