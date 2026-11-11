@@ -26,10 +26,10 @@ It was announced in April 2018 and released in May 2018.
 
 ## AOSPA Android 17
 
-The experimental `AOSPA-CLO` branch targets Paranoid Android Calcite on
+The experimental `AOSPA` branch targets Paranoid Android Calcite on
 the non-NFC X00TD with kernel 4.19 and A-only dynamic partitions. Use the
-matching `AOSPA-CLO` local manifest, device, common, kernel, vendor and
-audio branches. The original `AOSPA` branches remain separate.
+matching `AOSPA` local manifest, device, common, kernel, vendor and audio
+branches. All AOSPA bringup work is maintained on this single branch.
 
 Qualcomm dependencies follow native AOSPA/CLO paths. Display, media and
 audio use AOSPA's legacy 89xx/4.19 base. The SDM660 vendor policy uses the
@@ -41,7 +41,7 @@ Initialize a separate server checkout with the official manifest:
 
 ```sh
 repo init -u https://github.com/AOSPA/manifest -b calcite
-git clone -b AOSPA-CLO https://github.com/Kyura-Ground/local_manifests .repo/local_manifests
+git clone -b AOSPA https://github.com/Kyura-Ground/local_manifests .repo/local_manifests
 ```
 
 Then run:
