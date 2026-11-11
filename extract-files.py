@@ -14,9 +14,7 @@ from extract_utils.main import (
 )
 
 namespace_imports = [
-    'hardware/qcom-caf/sdm660',
     'vendor/asus/sdm660-common',
-    'vendor/qcom/opensource/display',
 ]
 
 # Define the blob fixups

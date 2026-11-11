@@ -26,20 +26,24 @@ It was announced in April 2018 and released in May 2018.
 
 ## AOSPA Android 17
 
-The `AOSPA` branch targets Paranoid Android Calcite on the non-NFC X00TD
-with the existing 4.19 kernel and A-only dynamic partition layout.
-It is based on the `Infinity` device/common trees. Use the matching
-`AOSPA` local manifest, device, common and kernel branches, together with
-the `Infinity` proprietary vendor branch.
+The experimental `AOSPA-CLO` branch targets Paranoid Android Calcite on
+the non-NFC X00TD with kernel 4.19 and A-only dynamic partitions. Use the
+matching `AOSPA-CLO` local manifest, device, common, kernel, vendor and
+audio branches. The original `AOSPA` branches remain separate.
+
+Qualcomm dependencies follow native AOSPA/CLO paths. Display, media and
+audio use AOSPA's legacy 89xx/4.19 base. The SDM660 vendor policy uses the
+older official AOSPA policy branch and still needs Android 17 compilation
+and runtime validation. This is a compatibility port, not an unmodified
+Qualcomm BSP.
 
 Initialize a separate server checkout with the official manifest:
 
 ```sh
 repo init -u https://github.com/AOSPA/manifest -b calcite
+git clone -b AOSPA-CLO https://github.com/Kyura-Ground/local_manifests .repo/local_manifests
 ```
 
-Place the matching `local_manifest.xml` in `.repo/local_manifests/` after
-the device, common, kernel and local manifest branches are published.
 Then run:
 
 ```sh
@@ -56,6 +60,12 @@ hooks or framework patch files.
 Lineage SDK overlays, LiveDisplay and the Lineage screen-off gesture
 service are not installed. The device Power HAL retains its standard
 Android double-tap-to-wake implementation.
+
+The ASUS Bluetooth blobs need the legacy btconfigstore HIDL ABI; its
+definitions are kept in the common tree. The existing basic USB service
+and dummy perf client also live there. These compatibility sources retain their upstream
+LineageOS attribution. Charging control uses AOSPA's own service, which
+keeps the `vendor.lineage.health` interface name.
 
 This is an initial bringup. Host configuration/header checks do not
 replace a full server build, image size checks or hardware boot tests.
