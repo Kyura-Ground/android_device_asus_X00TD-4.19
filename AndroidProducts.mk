@@ -5,5 +5,8 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/infinity_X00TD.mk
+    $(LOCAL_DIR)/aospa_X00TD.mk
+
+COMMON_LUNCH_CHOICES := \
+    aospa_X00TD-userdebug
 

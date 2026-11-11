@@ -6,25 +6,20 @@
 
 # Inherit from those products. Most specific first.
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base_telephony.mk)
 
-# Select the variant before the common configuration reads it.
-WITH_GAPPS ?= false
-INFINITY_BUILD_TYPE := UNOFFICIAL
-INFINITY_MAINTAINER := Kyura
 PRODUCT_GMS_CLIENTID_BASE := android-asus
-TARGET_EXCLUDES_AUDIOFX := true
 TARGET_USES_DOLBY := true
-TARGET_DISABLE_MATLOG := true
-
-# Inherit Infinity-X phone configuration.
-$(call inherit-product, vendor/infinity/config/common_full_phone.mk)
+TARGET_BOOT_ANIMATION_RES := 1080
 
 # Inherit from X00TD device
 $(call inherit-product, $(LOCAL_PATH)/device.mk)
 
+# Inherit the AOSPA configuration after the device selects its hardware.
+$(call inherit-product, vendor/aospa/target/product/aospa-target.mk)
+
 # Device identifier. This must come after all inclusions.
-PRODUCT_NAME := infinity_X00TD
+PRODUCT_NAME := aospa_X00TD
 PRODUCT_DEVICE := X00TD
 PRODUCT_BRAND := asus
 PRODUCT_MODEL := Zenfone Max Pro M1

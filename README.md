@@ -23,3 +23,39 @@ It was announced in April 2018 and released in May 2018.
 ## Device picture
 
 ![Asus Zenfone Max Pro M1](https://github.com/Navin136/Navin136/blob/main/X00TD.jpg)
+
+## AOSPA Android 17
+
+The `AOSPA` branch targets Paranoid Android Calcite on the non-NFC X00TD
+with the existing 4.19 kernel and A-only dynamic partition layout.
+It is based on the `Infinity` device/common trees. Use the matching
+`AOSPA` local manifest, device, common and kernel branches, together with
+the `Infinity` proprietary vendor branch.
+
+Initialize a separate server checkout with the official manifest:
+
+```sh
+repo init -u https://github.com/AOSPA/manifest -b calcite
+```
+
+Place the matching `local_manifest.xml` in `.repo/local_manifests/` after
+the device, common, kernel and local manifest branches are published.
+Then run:
+
+```sh
+repo sync -c --no-tags -j4
+./rom-build.sh X00TD
+```
+
+AOSPA supplies GApps. The tree keeps the stock system/vendor backing
+devices and does not reserve Infinity's additional 1 GB for sideloaded
+GApps. ZRAM sizing still follows the existing RAM detection scripts;
+Dalvik uses stock ASUS heap properties. This port does not use libinit
+hooks or framework patch files.
+
+Lineage SDK overlays, LiveDisplay and the Lineage screen-off gesture
+service are not installed. The device Power HAL retains its standard
+Android double-tap-to-wake implementation.
+
+This is an initial bringup. Host configuration/header checks do not
+replace a full server build, image size checks or hardware boot tests.
